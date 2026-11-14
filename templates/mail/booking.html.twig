@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="{{ locale|e('html_attr') }}">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>{{ subject|e('html') }}</title></head>
+<body style="margin:0;padding:24px 12px;background:#f4f2ee;color:#1f1d1a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.55">
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:560px;margin:0 auto;background:#ffffff;border-radius:16px">
+        <tr><td style="padding:28px 32px 0;font-size:14px;color:#6b665e">{{ business|e('html') }}</td></tr>
+        <tr><td style="padding:8px 32px 4px;font-size:22px;line-height:1.3;font-weight:600">{{ heading|e('html') }}</td></tr>
+        <tr><td style="padding:8px 32px 0">
+            {% for paragraph in paragraphs %}<p style="margin:12px 0;white-space:pre-line">{{ paragraph|e('html') }}</p>{% endfor %}
+        </td></tr>
+        {% if details %}
+            <tr><td style="padding:12px 32px 4px">
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;background:#f4f2ee;border-radius:12px">
+                    {% for detail in details %}
+                        <tr>
+                            <td style="padding:10px 16px;vertical-align:top;width:30%;color:#6b665e;font-size:13px">{{ detail.label|e('html') }}</td>
+                            <td style="padding:10px 16px;vertical-align:top;white-space:pre-line">{{ detail.value|e('html') }}</td>
+                        </tr>
+                    {% endfor %}
+                </table>
+            </td></tr>
+        {% endif %}
+        {% if link %}
+            <tr><td style="padding:20px 32px 4px"><a href="{{ link.url|e('html_attr') }}" style="display:inline-block;padding:11px 20px;border-radius:999px;background:#1f1d1a;color:#ffffff;text-decoration:none;font-weight:600">{{ link.label|e('html') }}</a></td></tr>
+        {% endif %}
+        <tr><td style="padding:24px 32px 28px;color:#6b665e;font-size:13px">{{ business|e('html') }}</td></tr>
+    </table>
+</body>
+</html>

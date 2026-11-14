@@ -1,0 +1,31 @@
+{% trans_default_domain 'messages' %}
+<!doctype html>
+<html lang="{{ locale }}">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex, nofollow">
+    <title>{{ 'Termin absagen'|trans }}</title>
+    <link rel="stylesheet" href="{{ asset('booking.css', 'nordwerk_booking') }}">
+</head>
+<body class="booking-page">
+    <main class="booking booking--cancel">
+        {% if state == 'unknown' %}
+            <h1 class="booking__heading">{{ 'Termin nicht gefunden'|trans }}</h1>
+            <p class="booking__hint">{{ 'Der Link ist nicht mehr gültig. Bitte melden Sie sich direkt bei uns.'|trans }}</p>
+        {% else %}
+            <h1 class="booking__heading">{% if state == 'open' %}{{ 'Termin absagen?'|trans }}{% elseif state == 'past' %}{{ 'Dieser Termin liegt in der Vergangenheit'|trans }}{% else %}{{ 'Ihr Termin ist abgesagt'|trans }}{% endif %}</h1>
+            <p class="booking__chosen">{{ appointment.title }}<br>{{ when.long }}</p>
+            {% if state == 'open' %}
+                <form method="post">
+                    <p class="booking__hint">{{ 'Die Zeit wird danach wieder frei. Sie bekommen eine Bestätigung per E-Mail.'|trans }}</p>
+                    <button type="submit" class="booking__submit">{{ 'Termin absagen'|trans }}</button>
+                </form>
+            {% elseif state == 'done' or state == 'cancelled' %}
+                <p class="booking__hint">{{ 'Die Absage ist eingetragen.'|trans }}</p>
+                {% if appointment.pageUrl %}<p><a class="booking__submit" href="{{ appointment.pageUrl }}">{{ 'Neuen Termin wählen'|trans }}</a></p>{% endif %}
+            {% endif %}
+        {% endif %}
+    </main>
+</body>
+</html>

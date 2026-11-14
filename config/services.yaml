@@ -1,0 +1,37 @@
+services:
+  _defaults:
+    autowire: true
+    autoconfigure: true
+
+  Nordwerk\BookingBundle\:
+    resource: ../src/
+    exclude:
+      - ../src/ContaoManager/
+      - ../src/DependencyInjection/
+      - ../src/Domain/
+      - ../src/NordwerkBookingBundle.php
+
+  # DCA callbacks are looked up in the container by class name.
+  Nordwerk\BookingBundle\Backend\BookingTypeCallbacks:
+    public: true
+  Nordwerk\BookingBundle\Backend\AppointmentCallbacks:
+    public: true
+  Nordwerk\BookingBundle\Backend\ContentCallbacks:
+    public: true
+
+  Nordwerk\BookingBundle\Infrastructure\RateLimiter:
+    arguments:
+      $secret: "%kernel.secret%"
+
+  # Public for the tests and fixture scripts.
+  Nordwerk\BookingBundle\Infrastructure\Bookings:
+    public: true
+  Nordwerk\BookingBundle\Infrastructure\AfterResponse:
+    public: true
+  Nordwerk\BookingBundle\Cron\BookingCron:
+    public: true
+
+  Nordwerk\BookingBundle\Controller\BookingApiController:
+    tags: ["controller.service_arguments"]
+  Nordwerk\BookingBundle\Controller\CancelController:
+    tags: ["controller.service_arguments"]

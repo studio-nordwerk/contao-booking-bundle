@@ -1,0 +1,117 @@
+{% extends '@Contao/content_element/_base.html.twig' %}
+{% trans_default_domain 'messages' %}
+
+{#
+    Terminbuchung: Tag → Uhrzeit → Angaben → Bestätigung. The markup follows the booking on
+    nordwerk.studio; booking.js fills calendar and times from the JSON route. Every block can
+    be overridden in the Template Studio; texts come from the translations.
+#}
+{% block content %}
+    {% if available %}
+        {% add 'nordwerk_booking_css' to head %}<link rel="stylesheet" href="{{ asset('booking.css', 'nordwerk_booking') }}">{% endadd %}
+        {% add 'nordwerk_booking_js' to body %}<script src="{{ asset('booking.js', 'nordwerk_booking') }}" defer></script>{% endadd %}
+        <div class="booking" data-booking data-slots="{{ slots_url }}" data-action="{{ book_url }}">
+            {% block booking_intro %}
+                <p class="booking__meta">
+                    <span class="booking__type">{{ booking_type.title }}</span>
+                    <span class="booking__duration">{{ '%minutes% Minuten'|trans({'%minutes%': booking_type.duration}) }}</span>
+                    {% if booking_type.location %}<span class="booking__location">{{ booking_type.location }}</span>{% endif %}
+                </p>
+            {% endblock %}
+            <div class="booking__main" aria-live="polite">
+                {% block booking_pick %}
+                    <div class="booking__pick" data-step="pick">
+                        <div class="booking__calendar-column">
+                            <p class="booking__label">{{ 'Tag wählen'|trans }}</p>
+                            <div class="booking__calendar">
+                                <div class="booking__calendar-head">
+                                    <button type="button" class="booking__nav" data-month="-1" aria-label="{{ 'Vorheriger Monat'|trans }}" disabled>
+                                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 5-7 7 7 7"></path></svg>
+                                    </button>
+                                    <p class="booking__month" data-month-label></p>
+                                    <button type="button" class="booking__nav" data-month="1" aria-label="{{ 'Nächster Monat'|trans }}" disabled>
+                                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 5 7 7-7 7"></path></svg>
+                                    </button>
+                                </div>
+                                <div class="booking__grid" data-grid>
+                                    {% for name in ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'] %}<span class="booking__weekday">{{ name|trans }}</span>{% endfor %}
+                                </div>
+                            </div>
+                            <p class="booking__zone" data-zone hidden></p>
+                        </div>
+                        <div class="booking__times-column">
+                            <p class="booking__label">{{ 'Uhrzeit'|trans }}</p>
+                            <p class="booking__note booking__note--error" role="alert" data-taken hidden>{{ 'Dieser Termin wurde gerade vergeben. Bitte wählen Sie eine andere Uhrzeit.'|trans }}</p>
+                            <p class="booking__hint" data-status>{{ 'Freie Termine werden geladen.'|trans }}</p>
+                            <noscript><p class="booking__hint">{{ 'Für die Terminauswahl wird JavaScript benötigt.'|trans }} {{ fallback }}</p></noscript>
+                            <p class="booking__day" data-day-label hidden></p>
+                            <div class="booking__times" data-times></div>
+                        </div>
+                    </div>
+                {% endblock %}
+
+                {% block booking_form %}
+                    <form class="booking__form" data-step="details" hidden>
+                        <div class="booking__chosen">
+                            <p data-chosen></p>
+                            <button type="button" class="booking__change" data-change>{{ 'Ändern'|trans }}</button>
+                        </div>
+                        <h3 class="booking__heading">{{ 'Ihre Angaben'|trans }}</h3>
+                        <p class="booking__note booking__note--error" role="alert" data-error hidden>{{ 'Die Buchung hat gerade nicht geklappt. Bitte versuchen Sie es erneut.'|trans }} {{ fallback }}</p>
+                        <p class="booking__note booking__note--error" role="alert" data-limit hidden>{{ 'Für diese Adresse sind schon mehrere Termine gebucht. Bitte melden Sie sich direkt bei uns.'|trans }}</p>
+                        <p class="booking__note booking__note--error" role="alert" data-invalid hidden>{{ 'Bitte prüfen Sie Name, E-Mail-Adresse und die Einwilligung.'|trans }}</p>
+                        <div class="booking__row">
+                            <div class="booking__field">
+                                <label for="booking-name-{{ element_id }}">{{ 'Ihr Name'|trans }}</label>
+                                <input id="booking-name-{{ element_id }}" name="name" type="text" autocomplete="name" maxlength="120" required>
+                            </div>
+                            <div class="booking__field">
+                                <label for="booking-email-{{ element_id }}">{{ 'E-Mail'|trans }}</label>
+                                <input id="booking-email-{{ element_id }}" name="email" type="email" autocomplete="email" maxlength="200" required>
+                            </div>
+                        </div>
+                        <div class="booking__field">
+                            <label for="booking-phone-{{ element_id }}">{{ 'Telefon'|trans }} <span class="booking__optional">{{ 'optional'|trans }}</span></label>
+                            <input id="booking-phone-{{ element_id }}" name="phone" type="tel" autocomplete="tel" maxlength="40">
+                        </div>
+                        <div class="booking__field">
+                            <label for="booking-note-{{ element_id }}">{{ 'Worum geht es?'|trans }} <span class="booking__optional">{{ 'optional'|trans }}</span></label>
+                            <textarea id="booking-note-{{ element_id }}" name="note" rows="3" maxlength="1000"></textarea>
+                        </div>
+                        {% block booking_consent %}
+                            <label class="booking__consent">
+                                <input type="checkbox" name="privacy" required>
+                                <span>
+                                    {{ 'Ich bin einverstanden, dass meine Angaben zur Vereinbarung und Durchführung des Termins gespeichert und verarbeitet werden.'|trans }}
+                                    {% if privacy_url %}{{ 'Details in der <a href="%url%" target="_blank" rel="noopener">Datenschutzerklärung</a>.'|trans({'%url%': privacy_url|e('html_attr')})|raw }}{% endif %}
+                                </span>
+                            </label>
+                        {% endblock %}
+                        <div class="booking__hp" aria-hidden="true"><label>{{ 'Bitte leer lassen'|trans }} <input type="text" name="_hp" tabindex="-1" autocomplete="off"></label></div>
+                        <button type="submit" class="booking__submit" data-submit>{{ 'Termin verbindlich buchen'|trans }}</button>
+                    </form>
+                {% endblock %}
+
+                {% block booking_done %}
+                    <div class="booking__done" data-step="done" role="status" tabindex="-1" hidden>
+                        <h3 class="booking__heading">{{ 'Ihr Termin ist gebucht.'|trans }}</h3>
+                        <p class="booking__chosen booking__chosen--done" data-booked></p>
+                        <p class="booking__hint">{{ 'Die Bestätigung mit Kalendereintrag ist unterwegs an Ihre E-Mail-Adresse. Dort finden Sie auch den Link, falls Sie absagen müssen.'|trans }}</p>
+                    </div>
+                {% endblock %}
+            </div>
+            <script type="application/json" data-booking-texts>{{ {
+                locale: app.request.locale|default('de'),
+                loading: 'Wird gebucht …'|trans,
+                submit: 'Termin verbindlich buchen'|trans,
+                none: 'Zurzeit sind keine Termine frei.'|trans,
+                failed: 'Die freien Termine konnten gerade nicht geladen werden.'|trans,
+                fallback: fallback,
+                zone: 'Alle Zeiten in der Zeitzone %zone%.'|trans,
+                range: '%day%, %start% bis %end% Uhr'|trans,
+            }|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_UNESCAPED_UNICODE'))|raw }}</script>
+        </div>
+    {% else %}
+        {% block booking_unavailable %}<p class="booking__hint">{{ 'Die Terminbuchung ist gerade nicht verfügbar.'|trans }} {{ fallback }}</p>{% endblock %}
+    {% endif %}
+{% endblock %}

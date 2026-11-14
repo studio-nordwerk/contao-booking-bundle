@@ -1,0 +1,3 @@
+nordwerk_booking:
+  resource: ../src/Controller/
+  type: attribute
